@@ -1,9 +1,9 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
-void ofApp::setup(){
+void ofApp::setup() {
 	blob::ID_Counter = 0;
-	
+
 	// camera
 	vidGrabber.setVerbose(true);
 	vidGrabber.setDeviceID(2);
@@ -16,41 +16,24 @@ void ofApp::setup(){
 	grayBg.allocate(1280, 720);
 	grayDiff.allocate(1280, 720);
 
-
 	// gui
-	LEDStatus.addListener(this, &ofApp::LEDTogglePressed);
-	
+	search.addListener(this, &ofApp::scanForShoes);
+
+	guiParameter.setName("Settings");
+
 	guiTracking.setName("Tracking");
 	guiTracking.add(threshold.set("threshold", 30, 0, 100));
 	guiTracking.add(threshold_blobRange.set("blob Range", 10, 0, 100));
-
-	guiOSC.setName("Communication");
-	guiOSC.add(ipAddress.set("IP", "localhost"));
-	guiOSC.add(outPort.set("Port", "4444"));
-	guiOSC.add(LEDStatus.set("LED", true));
-
-	guiParameter.setName("Settings");
 	guiParameter.add(guiTracking);
-	guiParameter.add(guiOSC);
+
+	guiShoes.setName("Shoes");
+	guiShoes.add(search.set("Search for shoes", false));
+	guiParameter.add(guiShoes);
+
 	gui.setup(guiParameter);
 	gui.loadFromFile("settings.xml");
 
-	// osc
-	string ip = ipAddress.get();
-	int p = stoi(outPort.get());
-	
-	oscSender.setup(ip, p);
-}
-
-//--------------------------------------------------------------
-
-void ofApp::LEDTogglePressed(bool &status)
-{
-	cout << "LED " << status << endl;
-	ofxOscMessage m;
-	m.setAddress("/1/toggleLED");
-	m.addIntArg(int(status));
-	oscSender.sendMessage(m, false);
+	oscReceiver.setup(oscReceiverPort);
 }
 
 //--------------------------------------------------------------
@@ -98,6 +81,22 @@ void ofApp::update(){
 				cout << "delete blob #" << blobs.at(i)->id << endl << endl;
 				blobs.erase(blobs.begin() + i);
 			}
+		}
+	}
+
+	// check for osc messages
+	while (oscReceiver.hasWaitingMessages())
+	{
+		ofxOscMessage m;
+		oscReceiver.getNextMessage(m);
+		cout << "incoming message: " << endl << m.getAddress() << " - " << m.getArgAsString(0) << " - " << m.getRemoteIp() << endl;
+		if (m.getAddress() == "/pair/accept") {
+			// add shoe
+			shoes.push_back(make_shared<shoe>(m.getRemoteIp(), oscSenderPort, m.getArgAsString(0)));
+			//guiParameter.add(shoes.back()->gui);
+			//gui.setup(guiParameter);
+			shoes.back()->startOSC();
+			setupGui();
 		}
 	}
 }
@@ -196,5 +195,54 @@ void ofApp::gotMessage(ofMessage msg){
 
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
+
+}
+
+//--------------------------------------------------------------
+
+void ofApp::scanForShoes(bool &status)
+{
+	if (status) {
+		shoes.clear();
+
+		ofxOscSender oscSender;
+		oscSender.setup("192.168.235.255", oscSenderPort);
+
+		ofxOscMessage m;
+		m.setAddress("/pair/request");
+		m.addIntArg(1);
+		oscSender.sendMessage(m, false);
+
+		search = false;
+	}
+}
+
+
+//--------------------------------------------------------------
+// reset the Gui and add all shoes
+void ofApp::setupGui()
+{
+	guiParameter.remove(guiShoes);
+	// clear Shoes-GUI
+	guiShoes.clear();
+	guiShoes.setName("Shoes");
+	guiShoes.add(search.set("Search for shoes", false));
+
+	// rebuild GUI
+
+
+	for each (shared_ptr<shoe> s in shoes)
+		guiShoes.add(s->gui);
+
+
+	guiParameter.add(guiShoes);
+
+	gui.setup(guiParameter);
+
+
+
+	// osc
+	//for each (shared_ptr<shoe> s in shoes)
+	//	s->startOSC();
 
 }

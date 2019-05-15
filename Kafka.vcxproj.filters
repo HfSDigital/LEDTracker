@@ -97,6 +97,9 @@
     <ClCompile Include="src\blob.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\shoe.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -1404,6 +1407,9 @@
       <Filter>addons\ofxOsc\libs\oscpack\src\osc</Filter>
     </ClInclude>
     <ClInclude Include="src\blob.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shoe.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

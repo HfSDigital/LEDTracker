@@ -1,7 +1,7 @@
+#pragma once
 #include "ofMain.h"
 
 
-#pragma once
 class blob
 {
 public:
@@ -13,8 +13,11 @@ public:
 	void draw();
 	void updatePos(float x, float y);
 
+	//--------------------------------------------------------------
+
 	int id;
 	ofVec2f position;
 	uint64_t lastTimeSeenAlive;
+
 };
 

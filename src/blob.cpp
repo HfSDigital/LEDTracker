@@ -32,3 +32,4 @@ void blob::updatePos(float x, float y)
 	position.y = y;
 	lastTimeSeenAlive = ofGetSystemTimeMillis();
 }
+

@@ -6,7 +6,7 @@
 #include "ofxOsc.h"
 
 #include "blob.h"
-
+#include "shoe.h"
 
 class ofApp : public ofBaseApp{
 
@@ -27,8 +27,8 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 
-		void LEDTogglePressed(bool &status);
-
+		void scanForShoes(bool &status);
+		void setupGui();
 		
 		// camera
 		ofVideoGrabber vidGrabber;
@@ -38,8 +38,9 @@ class ofApp : public ofBaseApp{
 		ofxCvGrayscaleImage grayImage, grayBg, grayDiff;
 		ofxCvContourFinder contourFinder;
 
-		// blobs
+		// blobs and shoes
 		vector<shared_ptr<blob>> blobs;
+		vector<shared_ptr<shoe>> shoes;
 
 		// gui
 		ofxPanel gui;
@@ -48,12 +49,16 @@ class ofApp : public ofBaseApp{
 		ofParameterGroup guiTracking;
 		ofParameter<float> threshold;
 		ofParameter<float> threshold_blobRange;
-		
-		ofParameterGroup guiOSC;
-		ofParameter<string> ipAddress;
-		ofParameter<string> outPort;
-		ofParameter<bool> LEDStatus;
 
+		ofParameterGroup guiShoes;
+		ofParameter<bool> search = false;
+		//ofxButton search;
+		
+		
 		// osc
-		ofxOscSender oscSender;
+		//ofxOscSender oscSender;
+		// listening port
+		const int oscSenderPort = 8000;
+		const int oscReceiverPort = 9000;
+		ofxOscReceiver oscReceiver;
 };
