@@ -7,6 +7,7 @@
 // these things needed to be changed
 const IPAddress outIp(192,168,235,54);        // remote IP of your computer
 const char shoeName[] = "Berta";
+
 //-------------------------------------------------------------
 
 unsigned long previousMillis = 0;
@@ -101,4 +102,3 @@ void pair(OSCMessage &msg, int addrOffset) {
     msg.empty();
   }
 }
-
