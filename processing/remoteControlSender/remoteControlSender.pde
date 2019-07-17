@@ -4,9 +4,7 @@ import netP5.*;
 OscP5 oscP5;
 NetAddress nodeMCU;
 
-float px, py, x, y;
-float sx = 0, sy = 0;
-float speed = 0.3;
+ArrayList<ControlUnit> controlUnits = new ArrayList<ControlUnit>();
 
 void setup()
 {
@@ -20,7 +18,12 @@ void setup()
   op.setDatagramSize(2048);
   op.setSRSP(OscProperties.ON);
   oscP5 = new OscP5(this, op);
-  nodeMCU = new NetAddress("192.168.43.35", 8000);
+  nodeMCU = new NetAddress("192.168.43.255", 8000);
+
+  controlUnits.add(new ControlUnit());
+  controlUnits.add(new ControlUnit());
+  controlUnits.get(0).c = color(255, 0, 0);
+  controlUnits.get(1).c = color(0, 255, 0);
 }
 
 
@@ -28,41 +31,66 @@ void draw()
 {
   background(111);
 
-  if (mousePressed) {
-    px = mouseX;
-    py = mouseY;
+  if (touches.length == 1) {
+    for (ControlUnit cu : controlUnits) {
+      cu.px = width / 2;
+      cu.py = touches[0].y;
+    }
+  } else if (touches.length == 2) {
+    if ((touches[0].x < width / 2) && (touches[1].x > width / 2))
+    {
+      controlUnits.get(0).px = width / 4;
+      controlUnits.get(0).py = touches[0].y;
+      controlUnits.get(1).px = width / 4 * 3;
+      controlUnits.get(1).py = touches[1].y;
+    } else if ((touches[0].x > width / 2) && (touches[1].x < width / 2))
+    {
+      controlUnits.get(0).px = width / 4;
+      controlUnits.get(0).py = touches[1].y;
+      controlUnits.get(1).px = width / 4 * 3;
+      controlUnits.get(1).py = touches[0].y;
+    } else {
+      for (ControlUnit cu : controlUnits) {
+        cu.px = width / 2;
+        cu.py = height / 2;
+      }
+    }
   } else
   {
-    px = width / 2;
-    py = height / 2;
+    for (ControlUnit cu : controlUnits) {
+      cu.px = width / 2;
+      cu.py = height / 2;
+    }
   }
 
+
+  // draw crosshair
   stroke(0);
-  line(width/2, 0, width/2, height);
-  line(0, height/2, width, height/2);
+  if (touches.length == 2) {
+    line(width / 4, 0, width / 4, height);
+    line(width / 4 * 3, 0, width / 4 * 3, height);
+  } else {
+    line(width / 2, 0, width / 2, height);
+  }
+  line(0, height / 2, width, height / 2);
   noStroke();
   fill(255);
-
-  x = lerp(x, px, speed);
-  y = lerp(y, py, speed);
-  ellipse(x, y, 100, 100);
-
   textSize(42);
-  
-  
-  if ( dist(px, py, x, y) > 0.2) {
-    sx = ((x/width - 1/width) - 0.5) * 2;
-    sy = ((y/height - 1/height) - 0.5) * -2;
-    text("sending... ", 10, 100);
-    
+
+
+  // update controlUnits
+  if (controlUnits.get(0).update() && controlUnits.get(1).update())
+  {
+    text("sending... ", 10, 120);
+
     // send OSC Message
-    sx = int(sx * 100) / 100.0;
-    sy = int(sy * 100) / 100.0;
     OscMessage runSpeed = new OscMessage("/run");
-    runSpeed.add(sy);                                   
+    runSpeed.add(controlUnits.get(0).sy);                                   
+    runSpeed.add(controlUnits.get(1).sy);                                   
     oscP5.send(runSpeed, nodeMCU );
   }
-  
-  
-  text(/*sx + ", " + */sy, 10, 40);
+
+  // draw controlUnits
+  controlUnits.get(0).draw(10, 40);
+  controlUnits.get(1).draw(10, 80);
 }

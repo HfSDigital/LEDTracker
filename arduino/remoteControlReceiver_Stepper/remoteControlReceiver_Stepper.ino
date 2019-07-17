@@ -93,6 +93,7 @@ void loop() {
 
 void setMotorSpeed(OSCMessage &msg, int addrOffset) {
   float m = msg.getFloat(0);
+  Serial.println();
   Serial.print(m);
   Serial.print("\t\t");
   if (m == 0) {
@@ -109,8 +110,8 @@ void setMotorSpeed(OSCMessage &msg, int addrOffset) {
     m = absf(m); // the abs-function is broken on floats, so we do it that way...
     Serial.print(m);
     Serial.print("\t\t");
-    stepTime = mapf(m, 0.0, 1.0, 1000.0, 100.0);  // same with map...
-    Serial.println(stepTime);
+    stepTime = mapf(m, 0.0, 1.0, 2000.0, 100.0);  // same with map...
+    Serial.print(stepTime);
   }
 }
 
