@@ -4,6 +4,7 @@
 #include "ofxOpenCv.h"
 #include "ofxGui.h"
 #include "ofxOsc.h"
+#include "ofxNetworkUtils.h"
 
 #include "blob.h"
 #include "shoe.h"
@@ -45,19 +46,25 @@ class ofApp : public ofBaseApp{
 		// gui
 		ofxPanel gui;
 		ofParameterGroup guiParameter;
-		
+		ofParameter<string> ipAddress;
+
 		ofParameterGroup guiTracking;
 		ofParameter<float> threshold;
 		ofParameter<float> threshold_blobRange;
+		ofParameter<float> minArea;
+		ofParameter<float> maxArea;
+		ofParameter<float> nConsidered;
 
 		ofParameterGroup guiShoes;
 		ofParameter<bool> search = false;
 		//ofxButton search;
 		
+
+		// Network Utils
+		Poco::Net::NetworkInterface::List siteLocalInterfaces;
 		
+
 		// osc
-		//ofxOscSender oscSender;
-		// listening port
 		const int oscSenderPort = 8000;
 		const int oscReceiverPort = 9000;
 		ofxOscReceiver oscReceiver;

@@ -10,7 +10,7 @@ public:
 
 	blob(float x, float y);
 	~blob();
-	void draw();
+	void draw(float minArea, float maxArea, float nConsidered);
 	void updatePos(float x, float y);
 
 	//--------------------------------------------------------------
