@@ -1,6 +1,6 @@
 #pragma once
 #include "ofMain.h"
-
+#include "shoe.h"
 
 class blob
 {
@@ -18,6 +18,6 @@ public:
 	int id;
 	ofVec2f position;
 	uint64_t lastTimeSeenAlive;
-
+	shared_ptr<shoe> connectedShoe;
 };
 

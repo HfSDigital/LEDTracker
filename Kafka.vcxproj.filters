@@ -339,6 +339,12 @@
 		<Filter Include="addons\ofxPoco\src">
 			<UniqueIdentifier>{C7D4269D-D8A9-A7BB-531B-98DA}</UniqueIdentifier>
 		</Filter>
+		<Filter Include="addons\ofxStateMachine">
+			<UniqueIdentifier>{DBD883A7-6ADE-DDE2-F786-03E6}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxStateMachine\src">
+			<UniqueIdentifier>{F43EE182-92E0-B7FC-C59F-CC91}</UniqueIdentifier>
+		</Filter>
 	</ItemGroup>
 	<ItemGroup>
 		<ClInclude Include="src\ofApp.h">
@@ -1480,6 +1486,12 @@
 		</ClInclude>
 		<ClInclude Include="..\..\..\addons\ofxPoco\src\ofxXmlPoco.h">
 			<Filter>addons\ofxPoco\src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxStateMachine\src\ofxState.h">
+			<Filter>addons\ofxStateMachine\src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxStateMachine\src\ofxStateMachine.h">
+			<Filter>addons\ofxStateMachine\src</Filter>
 		</ClInclude>
 	</ItemGroup>
 	<ItemGroup>

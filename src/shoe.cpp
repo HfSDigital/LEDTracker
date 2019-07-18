@@ -3,14 +3,16 @@
 
 shoe::shoe(string _ip, int _port, string _name)
 {
-	//oscSender = &_oscSender;
 	name = _name;
-	LEDStatus.addListener(this, &shoe::LEDTogglePressed);
+
+	// ---------------------------------
+	// GUI
+	// ---------------------------------
+	LEDStatus.addListener(this, &shoe::SetLED);
 	gui.setName(_name);
 	gui.add(ipAddress.set("IP", _ip));
 	gui.add(outPort.set("Port", to_string(_port)));
-	gui.add(LEDStatus.set("LED", true));
-
+	gui.add(LEDStatus.set("LED", false));
 }
 
 //--------------------------------------------------------------
@@ -25,10 +27,11 @@ void shoe::startOSC()
 	string ip = ipAddress.get();
 	int p = stoi(outPort.get());
 	oscSender.setup(ip, p);
+	LEDStatus = true;
 }
 //--------------------------------------------------------------
 
-void shoe::LEDTogglePressed(bool &status)
+void shoe::SetLED(bool &status)
 {
 	cout << "LED " << status << endl;
 	ofxOscMessage m;

@@ -4,10 +4,13 @@
 void ofApp::setup() {
 	blob::ID_Counter = 0;
 	
+	// ---------------------------------
+	// GET IP-ADDRESS OF WIFI-ADAPTER
+	// ---------------------------------
 	siteLocalInterfaces = ofxNet::NetworkUtils::listNetworkInterfaces(ofxNet::NetworkUtils::SITE_LOCAL);
-
-	bool wifiAdapterConnected = false;
 	string myIp = "0.0.0.0";
+	bool wifiAdapterConnected = false;
+
 	for (const auto& interface : siteLocalInterfaces)
 	{
 		cout << "Interface: [" << interface.name() << "] (" << interface.address().toString() << ")" << std::endl;
@@ -18,21 +21,27 @@ void ofApp::setup() {
 	}
 	if (!wifiAdapterConnected) cout << "No WiFi Adapter Connected!" << endl;
 
-
-	// camera
+	// ---------------------------------
+	// CAMERA
+	// ---------------------------------
 	vidGrabber.setVerbose(true);
 	vidGrabber.setDeviceID(2);
 	vidGrabber.initGrabber(1280, 720);
 	vidGrabber.videoSettings();
 
-	// tracker
+	// ---------------------------------
+	// TRACKER
+	// ---------------------------------
 	colorImg.allocate(1280, 720);
 	grayImage.allocate(1280, 720);
 	grayBg.allocate(1280, 720);
 	grayDiff.allocate(1280, 720);
 
-	// gui
+	// ---------------------------------
+	// GUI
+	// ---------------------------------
 	search.addListener(this, &ofApp::scanForShoes);
+	identify.addListener(this, &ofApp::identifyShoes);
 
 	guiParameter.setName("Settings");
 	guiParameter.add(ipAddress.set("IP: ", myIp));
@@ -40,28 +49,37 @@ void ofApp::setup() {
 	guiTracking.setName("Tracking");
 	guiTracking.add(threshold.set("threshold", 30, 0, 100));
 	guiTracking.add(threshold_blobRange.set("blob Range", 10, 0, 100));
-	int _totalArea = vidGrabber.getWidth() * vidGrabber.getHeight();
-	int _maxArea = _totalArea * 0.01;
+	int _maxArea = vidGrabber.getWidth() * vidGrabber.getHeight() * 0.01;
 	guiTracking.add(minArea.set("minArea", 5, 1, _maxArea/10));
-	guiTracking.add(nConsidered.set("nConsidered", 10, 0.1, _maxArea/10));
+	guiTracking.add(nConsidered.set("nConsidered", 10, 1, _maxArea/10));
 	guiTracking.add(maxArea.set("maxArea", 200, _maxArea / 100, _maxArea));
 	guiParameter.add(guiTracking);
 
-	guiShoes.setName("Shoes");
-	guiShoes.add(search.set("Search for shoes", false));
-	guiParameter.add(guiShoes);
+	setupShoeGUI();
 
-	gui.setup(guiParameter);
 	gui.loadFromFile("settings.xml");
 	ipAddress = myIp;				// re-set ip adress after settings.xml is loaded
 
-	// osc 
+	// ---------------------------------
+	// OSC 
+	// ---------------------------------
 	oscReceiver.setup(oscReceiverPort);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	vidGrabber.update();
+
+	if (state == IDENTIFY) {
+		if (identify_currentShoe < shoes.size() && identify_findNextShoe) {
+			shoes.at(identify_currentShoe)->LEDStatus = true;
+			identify_findNextShoe = false;
+			//identify_currentShoe++;
+		}
+		else if (identify_currentShoe >= shoes.size()) {
+			state = PLAY;
+		}
+	}
 	//do we have a new frame?
 	if (vidGrabber.isFrameNew()) {
 		colorImg.setFromPixels(vidGrabber.getPixels());
@@ -70,9 +88,8 @@ void ofApp::update(){
 		grayImage.threshold(threshold);
 		
 		contourFinder.findContours(grayImage, minArea, maxArea, nConsidered, false, true);
-		//contourFinder.findContours(grayDiff, 5, (340 * 240) / 4, 4, false, true);
-
-		for (int j = 0; j < contourFinder.nBlobs; j++) {
+		
+		for (int j = 0; j < contourFinder.blobs.size(); j++) {
 			bool blobExists = false;
 			for (int i = 0; i < blobs.size(); i++) {
 				float dist = ofDist(contourFinder.blobs.at(j).centroid.x, contourFinder.blobs.at(j).centroid.y, blobs.at(i)->position.x, blobs.at(i)->position.y);
@@ -86,18 +103,28 @@ void ofApp::update(){
 				float x = contourFinder.blobs.at(j).centroid.x;
 				float y = contourFinder.blobs.at(j).centroid.y;
 				blobs.push_back(make_shared<blob>(x, y));
+				
+				if (state == IDENTIFY) 
+				{
+					trackedShoes[shoes.at(identify_currentShoe)] = blobs.back();
+					blobs.back()->connectedShoe = shoes.at(identify_currentShoe);
+					shoes.at(identify_currentShoe)->LEDStatus = false;
+					identify_currentShoe++;
+					identify_findNextShoe = true;
+				}
 			}
 		}
 
-		// remove blobs with timeout
-		for (int i = 0; i < blobs.size(); i++) {
-			if ((blobs.at(i)->lastTimeSeenAlive + blob::timeout) < ofGetSystemTimeMillis())
-			{
-				cout << blobs.at(i)->lastTimeSeenAlive << endl;
-				cout << blob::timeout << endl;
-				cout << ofGetSystemTimeMillis() << endl;
-				cout << "delete blob #" << blobs.at(i)->id << endl << endl;
-				blobs.erase(blobs.begin() + i);
+		if (state == PAIR) {
+			for (int i = 0; i < blobs.size(); i++) {
+				if ((blobs.at(i)->lastTimeSeenAlive + blob::timeout) < ofGetSystemTimeMillis())
+				{
+					cout << blobs.at(i)->lastTimeSeenAlive << endl;
+					cout << blob::timeout << endl;
+					cout << ofGetSystemTimeMillis() << endl;
+					cout << "delete blob #" << blobs.at(i)->id << endl << endl;
+					blobs.erase(blobs.begin() + i);
+				}
 			}
 		}
 	}
@@ -112,7 +139,7 @@ void ofApp::update(){
 			// add shoe
 			shoes.push_back(make_shared<shoe>(m.getRemoteIp(), oscSenderPort, m.getArgAsString(0)));
 			shoes.back()->startOSC();
-			setupGui();
+			setupShoeGUI();
 		}
 	}
 }
@@ -142,6 +169,7 @@ void ofApp::draw(){
 	}
 
 	stringstream ss;
+	ss << stateStrings[state] << endl;
 	ss << "contourBlobs: ";
 	ss << contourFinder.nBlobs << "\n";
 	ss << "particleBlobs: ";
@@ -212,6 +240,7 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 void ofApp::scanForShoes(bool &status)
 {
 	if (status) {
+		state = PAIR;
 		shoes.clear();
 
 		ofxOscSender oscSender;
@@ -229,16 +258,34 @@ void ofApp::scanForShoes(bool &status)
 	}
 }
 
+//--------------------------------------------------------------
+
+void ofApp::identifyShoes(bool &status)
+{
+	if (status) {
+		state = IDENTIFY;
+		for each(shared_ptr<shoe> shoe in shoes) {
+			shoe->LEDStatus = false;
+			//shoe->pairedBlob = nullptr;
+			identify_currentShoe = 0;
+		}
+		blobs.clear();
+		blob::ID_Counter = 0;
+		identify_findNextShoe = true;
+		identify = false;
+	}
+}
 
 //--------------------------------------------------------------
 // reset the Gui and add all shoes
-void ofApp::setupGui()
+void ofApp::setupShoeGUI()
 {
 	guiParameter.remove(guiShoes);
 	// clear Shoes-GUI
 	guiShoes.clear();
 	guiShoes.setName("Shoes");
 	guiShoes.add(search.set("Search for shoes", false));
+	guiShoes.add(identify.set("Identify shoes", false));
 
 	// rebuild GUI
 	for each (shared_ptr<shoe> s in shoes)
@@ -247,3 +294,4 @@ void ofApp::setupGui()
 	guiParameter.add(guiShoes);
 	gui.setup(guiParameter);
 }
+

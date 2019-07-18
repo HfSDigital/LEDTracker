@@ -3,3 +3,4 @@ ofxNetworkUtils
 ofxOpenCv
 ofxOsc
 ofxPoco
+ofxStateMachine

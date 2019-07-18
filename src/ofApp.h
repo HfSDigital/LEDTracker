@@ -10,7 +10,9 @@
 #include "shoe.h"
 
 class ofApp : public ofBaseApp{
-
+	private:
+		enum State { PAIR, IDENTIFY, PLAY };
+		string stateStrings[3] = { "PAIR", "IDENTIFY", "PLAY" };
 	public:
 		void setup();
 		void update();
@@ -29,21 +31,20 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
 
 		void scanForShoes(bool &status);
-		void setupGui();
+		void identifyShoes(bool &status);
+		void setupShoeGUI();
 		
-		// camera
+		// ---------------------------------
+		// CAMERA + TRACKER
+		// ---------------------------------
 		ofVideoGrabber vidGrabber;
-
-		// tracker
 		ofxCvColorImage colorImg;
 		ofxCvGrayscaleImage grayImage, grayBg, grayDiff;
 		ofxCvContourFinder contourFinder;
 
-		// blobs and shoes
-		vector<shared_ptr<blob>> blobs;
-		vector<shared_ptr<shoe>> shoes;
-
-		// gui
+		// ---------------------------------
+		// GUI
+		// ---------------------------------
 		ofxPanel gui;
 		ofParameterGroup guiParameter;
 		ofParameter<string> ipAddress;
@@ -57,15 +58,35 @@ class ofApp : public ofBaseApp{
 
 		ofParameterGroup guiShoes;
 		ofParameter<bool> search = false;
-		//ofxButton search;
-		
+		ofParameter<bool> identify = false;
 
+		// ---------------------------------
 		// Network Utils
+		// ---------------------------------
 		Poco::Net::NetworkInterface::List siteLocalInterfaces;
 		
-
-		// osc
+		// ---------------------------------
+		// OSC 
+		// ---------------------------------
 		const int oscSenderPort = 8000;
 		const int oscReceiverPort = 9000;
 		ofxOscReceiver oscReceiver;
+
+		// ---------------------------------
+		// STATE MACHINE
+		// ---------------------------------
+		State state = PAIR;
+
+		// ---------------------------------
+		// BLOBS AND SHOES
+		// ---------------------------------
+		vector<shared_ptr<blob>> blobs;
+		vector<shared_ptr<shoe>> shoes;
+		map<shared_ptr<shoe>, shared_ptr<blob>> trackedShoes;
+
+		// ---------------------------------
+		// Identify
+		// ---------------------------------
+		unsigned int identify_currentShoe = 0;
+		bool identify_findNextShoe = false;
 };
