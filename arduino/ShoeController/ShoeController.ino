@@ -15,7 +15,8 @@
 
 //-------------------------------------------------------------
 // these things needed to be changed
-const char shoeName[] = "Aurelius";
+//const char shoeName[] = "Anna";
+const char shoeName[] = "Bernd";
 
 //-------------------------------------------------------------
 

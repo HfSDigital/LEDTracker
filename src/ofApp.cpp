@@ -41,7 +41,6 @@ void ofApp::setup() {
 	// GUI
 	// ---------------------------------
 	search.addListener(this, &ofApp::scanForShoes);
-	identify.addListener(this, &ofApp::identifyShoes);
 
 	guiParameter.setName("Settings");
 	guiParameter.add(ipAddress.set("IP: ", myIp));
@@ -64,84 +63,175 @@ void ofApp::setup() {
 	// OSC 
 	// ---------------------------------
 	oscReceiver.setup(oscReceiverPort);
+
+	switchState(IDLE);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	vidGrabber.update();
+	bool allShoesPaired = true;
 
-	if (state == IDENTIFY) {
-		if (identify_currentShoe < shoes.size() && identify_findNextShoe) {
-			shoes.at(identify_currentShoe)->LEDStatus = true;
-			identify_findNextShoe = false;
-			//identify_currentShoe++;
-		}
-		else if (identify_currentShoe >= shoes.size()) {
-			state = PLAY;
-		}
+	switch (state) {
+
+	case IDLE:
+	{
+		blob::timeout = 3000;
+		break;
 	}
-	//do we have a new frame?
+
+	// 0) check for osc messages
+	case RECEIVEOSC:
+	{
+		while (oscReceiver.hasWaitingMessages())
+		{
+			ofxOscMessage m;
+			oscReceiver.getNextMessage(m);
+			cout << "incoming message: " << endl << m.getAddress() << " - " << m.getArgAsString(0) << " - " << m.getRemoteIp() << endl;
+			if (m.getAddress() == "/pair/accept") {
+				// add shoe
+				shoes.push_back(make_shared<shoe>(m.getRemoteIp(), oscSenderPort, m.getArgAsString(0)));
+				shoes.back()->startOSC();
+				setupShoeGUI();
+			}
+		}
+
+		if (ofGetElapsedTimeMillis() - lastStateSwitch > stateDuration)
+			switchState(CHECKSHOES, stateDuration);
+		break;
+	}
+
+	// 1) check if all shoes are paired to a blob
+	case CHECKSHOES:
+	{
+		for each (shared_ptr<shoe> s in shoes) {
+			if (s->pairedBlob == nullptr)
+			{
+				allShoesPaired = false;
+				break;
+			}
+		}
+		allShoesPaired ? switchState(ALLLEDSON, stateDuration / 2) : switchState(ALLLEDSOFF, stateDuration / 2);
+		break;
+	}
+
+	// 2)  turn off all IR-LEDs
+	case ALLLEDSOFF:
+	{
+		blob::timeout = 100;
+		for each (shared_ptr<shoe> s in shoes) {
+			s->setLED(false);
+		}
+
+		if (ofGetElapsedTimeMillis() - lastStateSwitch > stateDuration / 2)
+			switchState(TURNONONESHOE, stateDuration / 2);
+		break;
+	}
+
+	// 3) turn on one shoe
+	case TURNONONESHOE:
+	{
+		for each (shared_ptr<shoe> s in shoes) {
+			if (s->pairedBlob == nullptr)
+			{
+				s->setLED(true);
+				s->shoeInPairingMode = s;
+				break;
+			}
+		}
+
+		if (ofGetElapsedTimeMillis() - lastStateSwitch > stateDuration / 2)
+			switchState(PAIRSHOE, stateDuration / 2);
+		break;
+	}
+
+	// 4) pair 'shoe in pairing mode' with the last blob that was turned on
+	case PAIRSHOE:
+	{
+		if (blobs.size() > 0)
+			shoe::shoeInPairingMode->pairedBlob = blobs.back();
+
+		if (ofGetElapsedTimeMillis() - lastStateSwitch > stateDuration / 2)
+			switchState(CHECKSHOES);
+		break;
+	}
+
+	// 5) turn on all IR-LEDs
+	case ALLLEDSON:
+	{
+		for each (shared_ptr<shoe> s in shoes) {
+			s->setLED(true);
+		}
+
+		if (ofGetElapsedTimeMillis() - lastStateSwitch > stateDuration / 2)
+			switchState(IDLE);
+		break;
+	}
+
+	default:
+		break;
+	}
+	
+
+	// UPDATES...
+	vidGrabber.update();
+	pBar.update();
+	for each(shared_ptr<shoe> s in shoes) 
+	{
+		s->update();
+	}
+
+	
+	// TRACKING AND BLOB DETECTION
+	// do we have a new frame? -> do the tracking!
 	if (vidGrabber.isFrameNew()) {
 		colorImg.setFromPixels(vidGrabber.getPixels());
-		grayImage = colorImg; // convert our color image to a grayscale image
-
-		grayImage.threshold(threshold);
-		
+		grayImage = colorImg;			// convert our color image to a grayscale image..
+		grayImage.threshold(threshold); // add a threshold..
 		contourFinder.findContours(grayImage, minArea, maxArea, nConsidered, false, true);
-		
 		for (int j = 0; j < contourFinder.blobs.size(); j++) {
+			// iterate through ALL blobs the contourFinder finds
 			bool blobExists = false;
 			for (int i = 0; i < blobs.size(); i++) {
+				// comparing the positions of all known blobs with the position of the tracked blob. Is it known?
 				float dist = ofDist(contourFinder.blobs.at(j).centroid.x, contourFinder.blobs.at(j).centroid.y, blobs.at(i)->position.x, blobs.at(i)->position.y);
 				if (dist < threshold_blobRange) {
+					// the blob is known!! just update it's position!
 					blobExists = true;
 					blobs.at(i)->updatePos(contourFinder.blobs.at(j).centroid.x, contourFinder.blobs.at(j).centroid.y);
 				}
 			}
 			if (!blobExists)
 			{
+				// the blob is NOT known? add it to the blobs-vector.
 				float x = contourFinder.blobs.at(j).centroid.x;
 				float y = contourFinder.blobs.at(j).centroid.y;
 				blobs.push_back(make_shared<blob>(x, y));
-				
-				if (state == IDENTIFY) 
-				{
-					trackedShoes[shoes.at(identify_currentShoe)] = blobs.back();
-					blobs.back()->connectedShoe = shoes.at(identify_currentShoe);
-					shoes.at(identify_currentShoe)->LEDStatus = false;
-					identify_currentShoe++;
-					identify_findNextShoe = true;
-				}
 			}
 		}
 
-		if (state == PAIR) {
-			for (int i = 0; i < blobs.size(); i++) {
-				if ((blobs.at(i)->lastTimeSeenAlive + blob::timeout) < ofGetSystemTimeMillis())
-				{
-					cout << blobs.at(i)->lastTimeSeenAlive << endl;
-					cout << blob::timeout << endl;
-					cout << ofGetSystemTimeMillis() << endl;
-					cout << "delete blob #" << blobs.at(i)->id << endl << endl;
-					blobs.erase(blobs.begin() + i);
+	}
+
+	// DELETE UNUSED BLOBS
+	// If a registrated blob can't be found in the current tracking for a certain amount of time
+	// AND the blob isn't paired to a shoe, delete it.
+	for (int i = 0; i < blobs.size(); i++) {
+		if ((blobs.at(i)->lastTimeSeenAlive + blob::timeout) < ofGetSystemTimeMillis())
+		{
+			bool notInShoes = true;
+			for each(shared_ptr<shoe> s in shoes)
+			{
+				if (blobs.at(i) == s->pairedBlob) {
+					notInShoes = false;
+					break;
 				}
 			}
+			if (notInShoes)
+				blobs.erase(blobs.begin() + i);
 		}
 	}
 
-	// check for osc messages
-	while (oscReceiver.hasWaitingMessages())
-	{
-		ofxOscMessage m;
-		oscReceiver.getNextMessage(m);
-		cout << "incoming message: " << endl << m.getAddress() << " - " << m.getArgAsString(0) << " - " << m.getRemoteIp() << endl;
-		if (m.getAddress() == "/pair/accept") {
-			// add shoe
-			shoes.push_back(make_shared<shoe>(m.getRemoteIp(), oscSenderPort, m.getArgAsString(0)));
-			shoes.back()->startOSC();
-			setupShoeGUI();
-		}
-	}
+
+
 }
 
 //--------------------------------------------------------------
@@ -149,16 +239,6 @@ void ofApp::draw(){
 	ofSetHexColor(0xffffff);
 
 	colorImg.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
-	//contourFinder.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
-
-	// draw xy-coordinates at all blobs
-	//for (int i = 0; i < contourFinder.nBlobs; i++) {
-	//	ofRectangle r = contourFinder.blobs.at(i).boundingRect;
-	//	stringstream ss;
-	//	ss << contourFinder.blobs.at(i).centroid.x << "\n" << contourFinder.blobs.at(i).centroid.y;
-	//	ofSetColor(255, 0, 0);
-	//	ofDrawBitmapString(ss.str(), contourFinder.blobs.at(i).centroid.x + 20, contourFinder.blobs.at(i).centroid.y);
-	//}
 
 	// draw all Blobs aka Shoes
 	for each (shared_ptr<blob> b in blobs) {
@@ -173,66 +253,13 @@ void ofApp::draw(){
 	ss << "contourBlobs: ";
 	ss << contourFinder.nBlobs << "\n";
 	ss << "particleBlobs: ";
-	ss << blobs.size();
+	ss << blobs.size() << "\n";
+
 	ofSetColor(255, 0, 0);
-	ofDrawBitmapString(ss.str(), 10, 10);
+	ofDrawBitmapString(ss.str(), 400, 10);
 
 	gui.draw();
-}
-
-//--------------------------------------------------------------
-void ofApp::keyPressed(int key){
-	
-}
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
-
+	pBar.draw();
 }
 
 //--------------------------------------------------------------
@@ -240,7 +267,6 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 void ofApp::scanForShoes(bool &status)
 {
 	if (status) {
-		state = PAIR;
 		shoes.clear();
 
 		ofxOscSender oscSender;
@@ -253,31 +279,13 @@ void ofApp::scanForShoes(bool &status)
 		m.setAddress("/pair/request");
 		m.addStringArg(ipAddress.toString());
 		oscSender.sendMessage(m, false);
-
 		search = false;
+
+		switchState(RECEIVEOSC, stateDuration);
 	}
 }
 
-//--------------------------------------------------------------
 
-void ofApp::identifyShoes(bool &status)
-{
-	if (status) {
-		state = IDENTIFY;
-		for each(shared_ptr<shoe> shoe in shoes) {
-			shoe->LEDStatus = false;
-			//shoe->pairedBlob = nullptr;
-			identify_currentShoe = 0;
-		}
-		blobs.clear();
-		blob::ID_Counter = 0;
-		identify_findNextShoe = true;
-		identify = false;
-	}
-}
-
-//--------------------------------------------------------------
-// reset the Gui and add all shoes
 void ofApp::setupShoeGUI()
 {
 	guiParameter.remove(guiShoes);
@@ -285,7 +293,6 @@ void ofApp::setupShoeGUI()
 	guiShoes.clear();
 	guiShoes.setName("Shoes");
 	guiShoes.add(search.set("Search for shoes", false));
-	guiShoes.add(identify.set("Identify shoes", false));
 
 	// rebuild GUI
 	for each (shared_ptr<shoe> s in shoes)
@@ -293,5 +300,85 @@ void ofApp::setupShoeGUI()
 
 	guiParameter.add(guiShoes);
 	gui.setup(guiParameter);
+}
+
+void ofApp::switchState(States _state)
+{
+	state = _state;
+	cout << endl << stateStrings[state];
+}
+
+void ofApp::switchState(States _state, uint64_t _duration)
+{
+	state = _state;
+	cout << endl << stateStrings[state];
+	if (_duration == 0) return;
+
+	pBar.init(stateStrings[state], _duration);
+	lastStateSwitch = ofGetElapsedTimeMillis();
+}
+
+
+
+void ofApp::keyPressed(int key) {
+	if (key == 'a') {
+
+	}
+	else if (key == 'r')
+	{
+		blobs.clear();
+		shoes.clear();
+		setupShoeGUI();
+	}
+
+}
+
+void ofApp::keyReleased(int key) {
+
+}
+
+
+
+progressBar::progressBar()
+{
+	size.x = ofGetWindowWidth() / 4;
+	size.y = ofGetWindowHeight() / 20;
+	pos.x = ofGetWindowWidth() / 2 - size.x / 2;
+	pos.y = ofGetWindowHeight() / 2 - size.y / 2;
+	percentage = 0.0f;
+	b_visible = false;
+}
+
+void progressBar::draw()
+{
+	if (!b_visible) return;
+	ofNoFill();
+	ofSetColor(222);
+	ofDrawBitmapString(name + " " + to_string(percentage), pos);
+	ofDrawRectangle(pos, size.x, size.y);
+	ofFill();
+	ofDrawRectangle(pos, size.x * percentage, size.y);
+}
+
+void progressBar::update()
+{
+	if (!b_visible) return;
+	if (percentage > 1.0) 
+	{
+		b_visible = false;
+		return;
+	}
+
+	percentage = (float)(ofGetElapsedTimeMillis() - startTime) / (float)duration;
+	cout << ".";
+}
+
+void progressBar::init(string _name, uint64_t _time)
+{
+	name = _name;
+	duration = _time;
+	b_visible = true;
+	percentage = 0.0f;
+	startTime = ofGetElapsedTimeMillis();
 }
 

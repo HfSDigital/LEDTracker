@@ -9,30 +9,42 @@
 #include "blob.h"
 #include "shoe.h"
 
+
+class progressBar
+{
+public:
+	progressBar();
+	void update();
+	void draw();
+	void init(string _name, uint64_t _time);
+
+	string name;
+	float percentage;
+	ofVec2f size;
+	ofVec2f pos;
+	bool b_visible;
+	uint64_t startTime;
+	uint64_t duration;
+};
+
+
+
 class ofApp : public ofBaseApp{
 	private:
-		enum State { PAIR, IDENTIFY, PLAY };
-		string stateStrings[3] = { "PAIR", "IDENTIFY", "PLAY" };
-	public:
+		enum States { IDLE, RECEIVEOSC, PAIRING, ALLLEDSOFF, CHECKSHOES, TURNONONESHOE, PAIRSHOE, ALLLEDSON };
+		string stateStrings[8] = { "IDLE", "RECEIVEOSC", "PAIRING", "ALLLEDSOFF", "CHECKSHOES", "TURNONONESHOE", "PAIRSHOE", "ALLLEDSON" };
+	
+public:
 		void setup();
 		void update();
 		void draw();
-
 		void keyPressed(int key);
 		void keyReleased(int key);
-		void mouseMoved(int x, int y );
-		void mouseDragged(int x, int y, int button);
-		void mousePressed(int x, int y, int button);
-		void mouseReleased(int x, int y, int button);
-		void mouseEntered(int x, int y);
-		void mouseExited(int x, int y);
-		void windowResized(int w, int h);
-		void dragEvent(ofDragInfo dragInfo);
-		void gotMessage(ofMessage msg);
 
 		void scanForShoes(bool &status);
-		void identifyShoes(bool &status);
 		void setupShoeGUI();
+		void switchState(States _state);
+		void switchState(States _state, uint64_t _duration);
 		
 		// ---------------------------------
 		// CAMERA + TRACKER
@@ -75,18 +87,16 @@ class ofApp : public ofBaseApp{
 		// ---------------------------------
 		// STATE MACHINE
 		// ---------------------------------
-		State state = PAIR;
+		States state;
+		uint64_t stateDuration = 5000;
+		uint64_t lastStateSwitch;
+		progressBar pBar;
 
 		// ---------------------------------
 		// BLOBS AND SHOES
 		// ---------------------------------
 		vector<shared_ptr<blob>> blobs;
-		vector<shared_ptr<shoe>> shoes;
-		map<shared_ptr<shoe>, shared_ptr<blob>> trackedShoes;
+		vector<shared_ptr<shoe>> shoes;	// the osc-connected shoes
 
-		// ---------------------------------
-		// Identify
-		// ---------------------------------
-		unsigned int identify_currentShoe = 0;
-		bool identify_findNextShoe = false;
 };
+

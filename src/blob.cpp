@@ -1,7 +1,8 @@
 #include "blob.h"
 
-int blob::ID_Counter;
+int blob::ID_Counter = 0;
 uint64_t blob::timeout = 3000;
+
 
 blob::blob(float x, float y)
 {
@@ -34,8 +35,7 @@ void blob::draw(float minArea, float maxArea, float nConsidered)
 
     stringstream ss;
 	ss << id;
-	if(connectedShoe) 
-		ss << " - " << connectedShoe->name;
+
 	ofSetColor(0, 255, 0);
 	ofDrawBitmapString(ss.str(), position.x-30, position.y);
 }
