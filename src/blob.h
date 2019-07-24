@@ -9,13 +9,17 @@ public:
 
 	blob(float x = -1, float y = -1);
 	~blob();
-	void draw(float minArea, float maxArea, float nConsidered);
+	void draw(float minArea, float maxArea, float nConsidered, float threshold_blobRange);
+	void update(int mouseX, int mouseY, int mousePressed, float threshold_blobRange);
 	void updatePos(float x, float y);
+	void mouseClicked();
 
 	//--------------------------------------------------------------
 
 	int id;
 	ofVec2f position;
 	uint64_t lastTimeSeenAlive;
+	bool isMouseOver = false;
+	bool isMarked = false;
 };
 

@@ -179,7 +179,12 @@ void ofApp::update(){
 	{
 		s->update();
 	}
+	for each(shared_ptr<blob> b in blobs)
+	{
+		b->update(ofGetMouseX(), ofGetMouseY(), ofGetMousePressed(), threshold_blobRange);
+	}
 
+	
 	
 	// TRACKING AND BLOB DETECTION
 	// do we have a new frame? -> do the tracking!
@@ -242,10 +247,7 @@ void ofApp::draw(){
 
 	// draw all Blobs aka Shoes
 	for each (shared_ptr<blob> b in blobs) {
-		b->draw(minArea, maxArea, nConsidered);
-		ofNoFill();
-		ofColor(0, 0, 255);
-		ofCircle(b->position.x, b->position.y, threshold_blobRange);
+		b->draw(minArea, maxArea, nConsidered, threshold_blobRange);
 	}
 
 	stringstream ss;
@@ -337,6 +339,18 @@ void ofApp::keyReleased(int key) {
 
 }
 
+void ofApp::mousePressed(int x, int y, int button) 
+{
+	if (button == 0) {
+		for each(shared_ptr<blob> b in blobs) {
+			b->mouseClicked();
+		}
+	}
+}
+
+void ofApp::mouseReleased(int x, int y, int button) 
+{
+}
 
 
 progressBar::progressBar()
