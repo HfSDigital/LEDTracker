@@ -33,7 +33,7 @@ class ofApp : public ofBaseApp
 {
 private:
 	enum States { IDLE, RECEIVEOSC, PAIRING, ALLLEDSOFF, CHECKSHOES, TURNONONESHOE, PAIRSHOE, ALLLEDSON };
-	string stateStrings[8] = { "IDLE", "RECEIVEOSC", "PAIRING", "ALLLEDSOFF", "CHECKSHOES", "TURNONONESHOE", "PAIRSHOE", "ALLLEDSON" };
+	string stateStrings[8] = { "IDLE", "RECEIVE_OSC", "PAIRING", "ALL_LEDS_OFF", "CHECK_SHOES", "TURN_ON_ONE_SHOE", "PAIR_SHOE", "ALL_LEDS_ON" };
 	
 public:
 	void setup();
@@ -91,7 +91,7 @@ public:
 	// STATE MACHINE
 	// ---------------------------------
 	States state;
-	uint64_t stateDuration = 5000;
+	uint64_t stateDuration = 2000;
 	uint64_t lastStateSwitch;
 	progressBar pBar;
 

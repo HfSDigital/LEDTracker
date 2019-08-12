@@ -20,11 +20,11 @@ public:
 	//--------------------------------------------------------------
 
 	int id;
-	ofVec2f position;
+	ofVec2f position, old_position;
 	ofVec2f direction;
 	uint64_t lastTimeSeenAlive;
 	bool isMouseOver = false;
-	bool isMarked = false;
+	bool isSelected = false;
 	shared_ptr<shoe> pairedShoe;
 };
 

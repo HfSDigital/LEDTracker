@@ -372,7 +372,7 @@ void progressBar::draw()
 	if (!b_visible) return;
 	ofNoFill();
 	ofSetColor(222);
-	ofDrawBitmapString(name + " " + to_string(percentage), pos);
+	ofDrawBitmapString(name + " " + to_string(percentage), pos.x, pos.y - 5);
 	ofDrawRectangle(pos, size.x, size.y);
 	ofFill();
 	ofDrawRectangle(pos, size.x * percentage, size.y);
