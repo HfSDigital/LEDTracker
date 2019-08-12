@@ -14,17 +14,25 @@ public:
 	void draw(float minArea, float maxArea, float nConsidered, float threshold_blobRange);
 	void update(int mouseX, int mouseY, int mousePressed, float threshold_blobRange);
 	void updatePos(float x, float y);
-	void mouseClicked();
+	void mouseClicked(int mouseX, int mouseY, int button);
 	void setDirection(int mouseX, int mouseY);
 
 	//--------------------------------------------------------------
 
 	int id;
-	ofVec2f position, old_position;
-	ofVec2f direction;
+	ofVec2f position, 
+			old_position,
+			direction,
+			destiny;
 	uint64_t lastTimeSeenAlive;
 	bool isMouseOver = false;
 	bool isSelected = false;
+	bool isDestinySet = false;
 	shared_ptr<shoe> pairedShoe;
+
+	
+	float m1, m2;
+	float angle1, angle2;
+	int quadrant;
 };
 

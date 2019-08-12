@@ -347,7 +347,7 @@ void ofApp::mousePressed(int x, int y, int button)
 {
 	if (button == 0) {
 		for each(shared_ptr<blob> b in blobs) {
-			b->mouseClicked();
+			b->mouseClicked(x, y, button);
 		}
 	}
 }
