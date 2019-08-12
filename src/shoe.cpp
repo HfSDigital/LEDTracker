@@ -1,4 +1,5 @@
 #include "shoe.h"
+#include "blob.h"
 //--------------------------------------------------------------
 
 shared_ptr<shoe> shoe::shoeInPairingMode = nullptr;
@@ -62,4 +63,20 @@ void shoe::setLED(bool status)
 	{
 		LEDStatus = status;
 	}
+}
+
+
+/* 
+firstStep() is called when the shoe and blob gets paired.
+It should move a few centimeters so the blob can calculate 
+the direction vector.
+*/
+void shoe::firstStep(int durationInMillis, int speed)
+{
+	cout << "firstStep()" << endl;
+	ofxOscMessage m;
+	m.setAddress("/1/firstStep");
+	m.addIntArg(int(durationInMillis));
+	m.addIntArg(int(speed));
+	oscSender.sendMessage(m, false);
 }

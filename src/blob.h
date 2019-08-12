@@ -1,6 +1,8 @@
 #pragma once
 #include "ofMain.h"
 
+class shoe;
+
 class blob
 {
 public:
@@ -13,13 +15,16 @@ public:
 	void update(int mouseX, int mouseY, int mousePressed, float threshold_blobRange);
 	void updatePos(float x, float y);
 	void mouseClicked();
+	void setDirection(int mouseX, int mouseY);
 
 	//--------------------------------------------------------------
 
 	int id;
 	ofVec2f position;
+	ofVec2f direction;
 	uint64_t lastTimeSeenAlive;
 	bool isMouseOver = false;
 	bool isMarked = false;
+	shared_ptr<shoe> pairedShoe;
 };
 

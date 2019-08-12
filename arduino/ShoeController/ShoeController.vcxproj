@@ -116,6 +116,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="TB6612FNG.h" />
     <ClInclude Include="__vm\.ShoeController.vsarduino.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
@@ -123,7 +124,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties arduino.upload.port="COM22" />
+      <UserProperties arduino.upload.port="COM8" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

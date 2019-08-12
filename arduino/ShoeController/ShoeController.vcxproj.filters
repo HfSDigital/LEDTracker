@@ -21,5 +21,8 @@
     <ClInclude Include="__vm\.ShoeController.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TB6612FNG.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

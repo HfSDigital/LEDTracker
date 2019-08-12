@@ -1,8 +1,9 @@
 #pragma once
 #include "ofMain.h"
 #include "ofxOsc.h"
-#include "blob.h"
+//#include "blob.h"
 
+class blob;
 
 class shoe : public enable_shared_from_this<shoe> {
 private:
@@ -14,6 +15,7 @@ public:
 	void startOSC();
 	void update();
 	void setLED(bool status);
+	void firstStep(int durationInMillis = 1000, int speed = 25);
 
 	// ---------------------------------
 

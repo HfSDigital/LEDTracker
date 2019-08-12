@@ -1,4 +1,5 @@
 #include "blob.h"
+#include "shoe.h"
 
 int blob::ID_Counter = 0;
 uint64_t blob::timeout = 3000;
@@ -11,6 +12,8 @@ blob::blob(float x, float y)
 	ID_Counter++;
 	position.x = x;
 	position.y = y;
+	pairedShoe = nullptr;
+
 }
 
 blob::~blob()
@@ -52,7 +55,9 @@ void blob::draw(float minArea, float maxArea, float nConsidered, float threshold
 	ofCircle(position.x, position.y, threshold_blobRange);
 
     stringstream ss;
-	ss << id;
+	ss << id << endl;
+	if(pairedShoe != nullptr)
+		ss << pairedShoe->name;
 
 	ofSetColor(0, 255, 0);
 	ofDrawBitmapString(ss.str(), position.x-30, position.y);

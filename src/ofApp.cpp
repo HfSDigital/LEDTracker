@@ -147,9 +147,12 @@ void ofApp::update(){
 	// 4) pair 'shoe in pairing mode' with the last blob that was turned on
 	case PAIRSHOE:
 	{
-		if (blobs.size() > 0)
+		if (blobs.size() > 0 && shoe::shoeInPairingMode->pairedBlob == nullptr) {
+			cout << "pair shoe.." << endl;
 			shoe::shoeInPairingMode->pairedBlob = blobs.back();
-
+			blobs.back()->pairedShoe = shoe::shoeInPairingMode;
+			shoe::shoeInPairingMode->firstStep();
+		}
 		if (ofGetElapsedTimeMillis() - lastStateSwitch > stateDuration / 2)
 			switchState(CHECKSHOES);
 		break;
@@ -328,6 +331,7 @@ void ofApp::keyPressed(int key) {
 	}
 	else if (key == 'r')
 	{
+		blob::ID_Counter = 0;
 		blobs.clear();
 		shoes.clear();
 		setupShoeGUI();
