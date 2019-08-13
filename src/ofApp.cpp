@@ -326,6 +326,7 @@ void ofApp::switchState(States _state, uint64_t _duration)
 
 
 void ofApp::keyPressed(int key) {
+	//cout << "key: " << key << endl;
 	if (key == 'a') {
 
 	}
@@ -336,7 +337,14 @@ void ofApp::keyPressed(int key) {
 		shoes.clear();
 		setupShoeGUI();
 	}
-
+	else if (key == 32) {	//space
+		for each (shared_ptr<shoe> s in shoes) {
+			s->stop();
+		}
+		for each (shared_ptr<blob> b in blobs) {
+			b->isDestinySet = false;
+		}
+	}
 }
 
 void ofApp::keyReleased(int key) {
@@ -354,6 +362,13 @@ void ofApp::mousePressed(int x, int y, int button)
 
 void ofApp::mouseReleased(int x, int y, int button) 
 {
+}
+
+void ofApp::exit()
+{
+	for each (shared_ptr<shoe> s in shoes) {
+		s->stop();
+	}
 }
 
 

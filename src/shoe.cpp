@@ -57,6 +57,8 @@ void shoe::SetLED(bool &status)
 	oscSender.sendMessage(m, false);
 }
 
+//--------------------------------------------------------------
+
 void shoe::setLED(bool status)
 {
 	if (LEDStatus != status) 
@@ -65,6 +67,7 @@ void shoe::setLED(bool status)
 	}
 }
 
+//--------------------------------------------------------------
 
 /* 
 firstStep() is called when the shoe and blob gets paired.
@@ -73,10 +76,31 @@ the direction vector.
 */
 void shoe::firstStep(int durationInMillis, int speed)
 {
-	cout << "firstStep()" << endl;
 	ofxOscMessage m;
 	m.setAddress("/1/firstStep");
 	m.addIntArg(int(durationInMillis));
 	m.addIntArg(int(speed));
+	oscSender.sendMessage(m, false);
+}
+
+//--------------------------------------------------------------
+
+void shoe::drive(int m1, int m2)
+{
+	m1 = (int)ofClamp(m1, -100, 100);
+	m2 = (int)ofClamp(m2, -100, 100);
+	ofxOscMessage m;
+	m.setAddress("/1/drive");
+	m.addIntArg(m1);
+	m.addIntArg(m2);
+	oscSender.sendMessage(m, false);
+}
+
+//--------------------------------------------------------------
+
+void shoe::stop()
+{
+	ofxOscMessage m;
+	m.setAddress("/1/stop");
 	oscSender.sendMessage(m, false);
 }

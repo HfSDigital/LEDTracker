@@ -23,8 +23,14 @@ public:
 	ofVec2f position, 
 			old_position,
 			direction,
-			destiny;
+			destinyPosition,
+			destinyDirection;
+
 	uint64_t lastTimeSeenAlive;
+	
+	uint64_t lastTimeUpdated;
+	static uint64_t updateInterval;
+
 	bool isMouseOver = false;
 	bool isSelected = false;
 	bool isDestinySet = false;
@@ -34,5 +40,7 @@ public:
 	float m1, m2;
 	float angle1, angle2;
 	int quadrant;
+	int motor1, motor2;
+	float speedRatioM1M2;
 };
 

@@ -22,6 +22,8 @@ public:
 	}
 
 	void drive(int motor1, int motor2) {
+		// needs values between -100 and 100
+		Serial.print("DRIVE");
 		digitalWrite(STBY, HIGH);
 
 		bool m1Direction = motor1 > 0 ? HIGH : LOW;
@@ -37,16 +39,11 @@ public:
 		int m2Speed = map(motor2, 0, 100, 0, 1023);     // so we map to 1023 and not 255
 		analogWrite(MOTOR_A_SPEED, m1Speed);
 		analogWrite(MOTOR_B_SPEED, m2Speed);
-
-		Serial.print("Speed: ");
-		Serial.print(m1Speed);
-		Serial.print("\t");
-		Serial.print(m2Speed);
 	}
 
 	void stop()
 	{
-		Serial.print("stop");
+		Serial.print("STOP");
 		digitalWrite(MOTOR_A_DIR1, 0);
 		digitalWrite(MOTOR_A_DIR2, 0);
 		digitalWrite(MOTOR_B_DIR1, 0);

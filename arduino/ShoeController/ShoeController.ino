@@ -96,9 +96,11 @@ void loop() {
 			msgIN.fill(Udp.read());
 		}
 		if (!msgIN.hasError()) {
-			msgIN.route("/1/toggleLED", toggleOnOff);
 			msgIN.route("/pair/request", pair);
+			msgIN.route("/1/toggleLED", toggleOnOff);
 			msgIN.route("/1/firstStep", firstStep);
+			msgIN.route("/1/drive", drive);
+			msgIN.route("/1/stop", stop);
 		}
 	}
 }
@@ -170,5 +172,34 @@ void firstStep(OSCMessage &msg, int addrOffset) {
 	motors.drive(speed, speed);
 	delay(duration);
 	motors.stop();
-
 }
+
+
+void stop(OSCMessage &msg, int addrOffset) {
+	motors.stop();
+}
+
+
+void drive(OSCMessage &msg, int addrOffset) {
+	int duration = 100;
+	int m1 = 0;
+	int m2 = 0;
+	if (msg.isInt(0) && msg.isInt(1)) {
+		m1 = msg.getInt(0);
+		m2 = msg.getInt(1);
+	}
+	else
+	{
+		Serial.println("ERR in drive() - can't get ints from osc parameters");
+		motors.stop();
+		return;
+	}
+	Serial.print("Starting Motors:\tm1: ");
+	Serial.print(m1);
+	Serial.print("\tm2: ");
+	Serial.println(m2);
+
+
+	motors.drive(m1, m2);
+}
+

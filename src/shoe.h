@@ -16,7 +16,8 @@ public:
 	void update();
 	void setLED(bool status);
 	void firstStep(int durationInMillis = 1000, int speed = 25);
-
+	void drive(int m1, int m2);
+	void stop();
 	// ---------------------------------
 
 	string name;
