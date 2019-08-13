@@ -97,7 +97,7 @@ void blob::draw(float minArea, float maxArea, float nConsidered, float threshold
 		ss << "angle1: " << setprecision(0) << angle1 << endl;
 		ss << "angle2: " << setprecision(0) << angle2 << endl;
 		ss << "quadrant: " << quadrant << endl;
-		ss << "speedRatioM1M2: " << speedRatioM1M2  <<"\tmotor1: " << motor1 << "\tmotor2: " << motor2 << endl;
+		ss << "speedRatioM1M2: " << speedRatioM1M2  <<"\nmotor1: " << motor1 << "\nmotor2: " << motor2 << endl;
 		ss << "distance to destiny: " << ofDist(position.x, position.y, destinyPosition.x, destinyPosition.y) << endl;
 		ofDrawBitmapString(ss.str(), 10, -20);
 		ofNoFill();
@@ -105,6 +105,8 @@ void blob::draw(float minArea, float maxArea, float nConsidered, float threshold
 		ofSetLineWidth(3);
 		ofDrawLine(0, -20, 0, 0);
 		ofSetLineWidth(1);
+		ofSetColor(155, 0, 0);
+		ofCircle(0, 0, destinyReachedDistance);
 		ofPopMatrix();
 	//}
 }
@@ -178,17 +180,28 @@ void blob::update(int mouseX, int mouseY, int mousePressed, float threshold_blob
 		// angle2 gibt mir an, um wieviel stärker sich das eine Rad als das andere drehen soll.
 		// der Quadrant gibt mir an, welches der beiden Räder sich stärker drehen soll
 		
-		int speed = 10;
+		float speed = 20;
 		speedRatioM1M2 = ofMap(angle2, 0, 180, 1, 0, true);
-		speedRatioM1M2 = ofClamp(speedRatioM1M2, 0.3, 1.0);
-		motor1 = speed / speedRatioM1M2;
-		motor2 = speed * speedRatioM1M2;
-		pairedShoe->drive(motor1, motor2);
+		speedRatioM1M2 = ofClamp(speedRatioM1M2, speedRatioClamp, 1.0);
+		if (quadrant <= 2) {
+			motor1 = speed / speedRatioM1M2;
+			motor2 = speed * speedRatioM1M2;
+		}
+		else
+		{
+			motor1 = speed * speedRatioM1M2;
+			motor2 = speed / speedRatioM1M2;
+		}
+		//motor1 = ofClamp(round(motor1), -speed, speed);
+		//motor2 = ofClamp(round(motor2), -speed, speed);
+		motor1 = round(motor1);
+		motor2 = round(motor2);
+		pairedShoe->drive((int)motor1, (int)motor2);
 		cout << "*";
 		lastTimeUpdated = ofGetElapsedTimeMillis();
 	}
 
-	if (ofDist(position.x, position.y, destinyPosition.x, destinyPosition.y) < 40 && isDestinySet)
+	if (ofDist(position.x, position.y, destinyPosition.x, destinyPosition.y) < destinyReachedDistance && isDestinySet)
 	{
 		cout << "Ziel erreicht, Stoppe Motoren." << endl;
 		pairedShoe->stop();
