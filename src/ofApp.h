@@ -5,6 +5,7 @@
 #include "ofxGui.h"
 #include "ofxOsc.h"
 #include "ofxNetworkUtils.h"
+#include "ofxGLFWJoystick.h"
 
 #include "blob.h"
 #include "shoe.h"
@@ -102,5 +103,18 @@ public:
 	vector<shared_ptr<blob>> blobs;
 	vector<shared_ptr<shoe>> shoes;	// the osc-connected shoes
 
+	// ---------------------------------
+	// JOYSTICK & RECORD
+	// ---------------------------------
+	int joystickID;
+	float joyX, joyY;
+	uint64_t recAndPlayInterval = 100;
+	uint64_t lastTimeRecordedOrPlayed;
+	typedef vector<vector<int>> motorRecord;
+	motorRecord testRecord;
+	bool b_playTestRecord = false;
+	uint64_t currentPlaybackPosition;
+
+	stringstream ss;
 };
 

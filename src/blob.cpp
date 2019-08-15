@@ -3,7 +3,7 @@
 
 int blob::ID_Counter = 0;
 uint64_t blob::timeout = 3000;
-uint64_t blob::updateInterval = 500;
+uint64_t blob::updateInterval = 100;
 
 blob::blob(float x, float y)
 {
@@ -97,7 +97,9 @@ void blob::draw(float minArea, float maxArea, float nConsidered, float threshold
 		ss << "angle1: " << setprecision(0) << angle1 << endl;
 		ss << "angle2: " << setprecision(0) << angle2 << endl;
 		ss << "quadrant: " << quadrant << endl;
-		ss << "speedRatioM1M2: " << speedRatioM1M2  <<"\nmotor1: " << motor1 << "\nmotor2: " << motor2 << endl;
+		ss << "speedRatioM1M2: " << speedRatioM1M2 << " alt.: " << speedRatioM1M2_alt
+			<< endl << "motor1: " << motor1 << " alt.: " << motor1_alt
+			<< endl << "\nmotor2: " << motor2 << " alt.: " << motor2_alt << endl;
 		ss << "distance to destiny: " << ofDist(position.x, position.y, destinyPosition.x, destinyPosition.y) << endl;
 		ofDrawBitmapString(ss.str(), 10, -20);
 		ofNoFill();
@@ -123,6 +125,10 @@ void blob::update(int mouseX, int mouseY, int mousePressed, float threshold_blob
 		direction.normalize();
 		old_position = position;
 	}
+
+	
+	if (pairedShoe == nullptr) 
+		return;
 
 
 	// Calc way if a destiny is set
@@ -181,8 +187,14 @@ void blob::update(int mouseX, int mouseY, int mousePressed, float threshold_blob
 		// der Quadrant gibt mir an, welches der beiden Räder sich stärker drehen soll
 		
 		float speed = 20;
+
+
+		// What follows are different variants on calculating the "route". How fast the motors turn etc.
+		// ----------------
+		// V1: Basic
 		speedRatioM1M2 = ofMap(angle2, 0, 180, 1, 0, true);
 		speedRatioM1M2 = ofClamp(speedRatioM1M2, speedRatioClamp, 1.0);
+		
 		if (quadrant <= 2) {
 			motor1 = speed / speedRatioM1M2;
 			motor2 = speed * speedRatioM1M2;
@@ -192,12 +204,33 @@ void blob::update(int mouseX, int mouseY, int mousePressed, float threshold_blob
 			motor1 = speed * speedRatioM1M2;
 			motor2 = speed / speedRatioM1M2;
 		}
-		//motor1 = ofClamp(round(motor1), -speed, speed);
-		//motor2 = ofClamp(round(motor2), -speed, speed);
 		motor1 = round(motor1);
 		motor2 = round(motor2);
-		pairedShoe->drive((int)motor1, (int)motor2);
-		cout << "*";
+		//pairedShoe->drive((int)motor1, (int)motor2);
+
+		// ----------------
+		// V2: Exponential 
+		speedRatioM1M2_alt = ofMap(angle2, 0, 180, 1, -1, true);
+		if(speedRatioM1M2_alt > 0)
+			speedRatioM1M2_alt = pow(speedRatioM1M2_alt, speedRatioExponent);
+		else
+			speedRatioM1M2_alt = -pow(speedRatioM1M2_alt, speedRatioExponent);
+
+		//speedRatioM1M2 = ofClamp(speedRatioM1M2, speedRatioClamp, 1.0);
+		if (quadrant <= 2) {
+			motor1_alt = speed;
+			motor2_alt = speed * speedRatioM1M2_alt;
+		}
+		else
+		{
+			motor1_alt = speed * speedRatioM1M2_alt;
+			motor2_alt = speed;
+		}
+		motor1_alt = round(motor1_alt);
+		motor2_alt = round(motor2_alt);
+		pairedShoe->drive((int)motor1_alt, (int)motor2_alt);
+		// ----------------
+
 		lastTimeUpdated = ofGetElapsedTimeMillis();
 	}
 
@@ -231,5 +264,15 @@ void blob::mouseClicked(int mouseX, int mouseY, int button)
 			isDestinySet = true;
 		}
 		isSelected = false;
+	}
+
+
+	if (isSelected)
+	{
+		shoe::selectedShoe = pairedShoe;
+	}
+	else
+	{
+		shoe::selectedShoe = nullptr;
 	}
 }

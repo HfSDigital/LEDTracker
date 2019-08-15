@@ -23,6 +23,7 @@ public:
 	string name;
 	shared_ptr<blob> pairedBlob;
 	static shared_ptr<shoe> shoeInPairingMode;
+	static shared_ptr<shoe> selectedShoe;
 
 	// ---------------------------------
 	// OSC

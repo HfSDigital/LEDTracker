@@ -41,9 +41,13 @@ public:
 	float angle1, angle2;
 	int quadrant;
 	float motor1, motor2;
+	float motor1_alt, motor2_alt;
 	float speedRatioM1M2;
+	float speedRatioM1M2_alt;
 
 	float speedRatioClamp = 0.2;
-	float destinyReachedDistance = 40;
+	float speedRatioExponent = 2.0;
+	float destinyReachedDistance = 50;
+
 };
 

@@ -3,6 +3,7 @@
 //--------------------------------------------------------------
 
 shared_ptr<shoe> shoe::shoeInPairingMode = nullptr;
+shared_ptr<shoe> shoe::selectedShoe = nullptr;
 
 shoe::shoe(string _ip, int _port, string _name)
 {

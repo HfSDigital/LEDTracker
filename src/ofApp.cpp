@@ -64,6 +64,13 @@ void ofApp::setup() {
 	// ---------------------------------
 	oscReceiver.setup(oscReceiverPort);
 
+	// ---------------------------------
+	// JOYSTICK
+	// ---------------------------------
+	ofxGLFWJoystick::one().printJoystickList();
+	lastTimeRecordedOrPlayed = ofGetElapsedTimeMillis();
+	joystickID = 0;
+
 	switchState(IDLE);
 }
 
@@ -76,6 +83,56 @@ void ofApp::update(){
 	case IDLE:
 	{
 		blob::timeout = 3000;
+
+		ofxGLFWJoystick::one().update();
+		joyX = (int)(ofxGLFWJoystick::one().getAxisValue(0, joystickID) * 100) / 100.0;
+		joyY = -(int)(ofxGLFWJoystick::one().getAxisValue(1, joystickID) * 100) / 100.0;
+		ofVec2f joystick = ofVec2f(joyX, joyY);
+		
+		
+		if (shoe::selectedShoe != nullptr) {
+			float m1 = 0, m2 = 0;
+			if (joystick.length() > 0.1) {
+				float d1Clamp = ofMap(joyX, -1.0, 0.0, 0.5, 0.0, true);
+				float d2Clamp = ofMap(joyX, 1.0, 0.0, 0.5, 0.0, true);
+
+				m1 = joyY - d1Clamp + d2Clamp;
+				m2 = joyY - d2Clamp + d1Clamp;
+
+				m1 = ofMap(m1, -1, 1, -100, 100, true);
+				m2 = ofMap(m2, -1, 1, -100, 100, true);
+
+				shoe::selectedShoe->drive((int)m1, (int)m2);
+			}
+			else if (joystick.length() < 0.1 && b_playTestRecord) {
+				// playback record data
+				if (ofGetElapsedTimeMillis() > lastTimeRecordedOrPlayed + recAndPlayInterval) {
+					if (testRecord.size() > 0 && testRecord.size() > currentPlaybackPosition) {
+						m1 = testRecord.at(currentPlaybackPosition).at(0);
+						m2 = testRecord.at(currentPlaybackPosition).at(1);
+						currentPlaybackPosition++;
+						shoe::selectedShoe->drive((int)m1, (int)m2);
+						lastTimeRecordedOrPlayed = ofGetElapsedTimeMillis();
+					}
+					else if (testRecord.size() == currentPlaybackPosition){
+						cout << "playback end" << endl;
+						currentPlaybackPosition = 0;
+						b_playTestRecord = false;
+					}
+				}
+			}
+			else {
+				// stop
+				shoe::selectedShoe->stop();
+			}
+
+			if (ofxGLFWJoystick::one().getButtonValue(0, joystickID)
+				&& ofGetElapsedTimeMillis() > lastTimeRecordedOrPlayed + recAndPlayInterval) {
+				// record motor data
+				testRecord.push_back( { (int)m1, (int)m2 } );
+				lastTimeRecordedOrPlayed = ofGetElapsedTimeMillis();
+			}
+		}
 		break;
 	}
 
@@ -253,7 +310,24 @@ void ofApp::draw(){
 		b->draw(minArea, maxArea, nConsidered, threshold_blobRange);
 	}
 
-	stringstream ss;
+	// Joystick-Debug
+	ofxGLFWJoystick::one().drawDebug(100, 100);
+	ofSetColor(255);
+	ofCircle(ofMap(joyX, -1, 1, 0, ofGetWidth()), ofMap(joyY, -1, 1, 0, ofGetHeight()), 3);
+	ss.str("");
+	ss  << "(" << joyX << " | " << joyY << ")";
+	ofDrawBitmapString(ss.str(), ofMap(joyX, -1, 1, 0, ofGetWidth()), ofMap(joyY, -1, 1, 0, ofGetHeight()));
+
+	ss.str("");
+	ss << "Records: ";
+	ss << testRecord.size();
+	//for each (vector<int> t in testRecord) {
+	//	ss << "[" << t.at(0) << "-" << t.at(1) << "]";
+	//}
+	ofDrawBitmapString(ss.str(), 100, 700);
+
+	// Some more messages to make it look more important:
+	ss.str("");
 	ss << stateStrings[state] << endl;
 	ss << "contourBlobs: ";
 	ss << contourFinder.nBlobs << "\n";
@@ -336,6 +410,11 @@ void ofApp::keyPressed(int key) {
 		blobs.clear();
 		shoes.clear();
 		setupShoeGUI();
+	}
+	else if (key == 'p')
+	{
+		currentPlaybackPosition = 0;
+		b_playTestRecord = true;
 	}
 	else if (key == 32) {	//space
 		for each (shared_ptr<shoe> s in shoes) {

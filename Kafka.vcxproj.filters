@@ -19,6 +19,9 @@
 		<ClCompile Include="src\shoe.cpp">
 			<Filter>src</Filter>
 		</ClCompile>
+		<ClCompile Include="..\..\..\addons\ofxGLFWJoystick\src\ofxGLFWJoystick.cpp">
+			<Filter>addons\ofxGLFWJoystick\src</Filter>
+		</ClCompile>
 		<ClCompile Include="..\..\..\addons\ofxGui\src\ofxBaseGui.cpp">
 			<Filter>addons\ofxGui\src</Filter>
 		</ClCompile>
@@ -128,6 +131,12 @@
 		</Filter>
 		<Filter Include="addons">
 			<UniqueIdentifier>{71834F65-F3A9-211E-73B8-DC85}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxGLFWJoystick">
+			<UniqueIdentifier>{ACF26D18-E34A-2627-A2B4-BE4D}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxGLFWJoystick\src">
+			<UniqueIdentifier>{BBEC6723-1609-E729-0633-7939}</UniqueIdentifier>
 		</Filter>
 		<Filter Include="addons\ofxGui">
 			<UniqueIdentifier>{4F2A59AF-5F4E-704B-D067-EC13}</UniqueIdentifier>
@@ -339,12 +348,6 @@
 		<Filter Include="addons\ofxPoco\src">
 			<UniqueIdentifier>{C7D4269D-D8A9-A7BB-531B-98DA}</UniqueIdentifier>
 		</Filter>
-		<Filter Include="addons\ofxStateMachine">
-			<UniqueIdentifier>{DBD883A7-6ADE-DDE2-F786-03E6}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="addons\ofxStateMachine\src">
-			<UniqueIdentifier>{F43EE182-92E0-B7FC-C59F-CC91}</UniqueIdentifier>
-		</Filter>
 	</ItemGroup>
 	<ItemGroup>
 		<ClInclude Include="src\ofApp.h">
@@ -358,6 +361,18 @@
 		</ClInclude>
 		<ClInclude Include="src\shoe.h">
 			<Filter>src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxGLFWJoystick\src\GenericJoystick.h">
+			<Filter>addons\ofxGLFWJoystick\src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxGLFWJoystick\src\LogitechF310.h">
+			<Filter>addons\ofxGLFWJoystick\src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxGLFWJoystick\src\N64Adaptoid.h">
+			<Filter>addons\ofxGLFWJoystick\src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxGLFWJoystick\src\ofxGLFWJoystick.h">
+			<Filter>addons\ofxGLFWJoystick\src</Filter>
 		</ClInclude>
 		<ClInclude Include="..\..\..\addons\ofxGui\src\ofxBaseGui.h">
 			<Filter>addons\ofxGui\src</Filter>
@@ -1486,12 +1501,6 @@
 		</ClInclude>
 		<ClInclude Include="..\..\..\addons\ofxPoco\src\ofxXmlPoco.h">
 			<Filter>addons\ofxPoco\src</Filter>
-		</ClInclude>
-		<ClInclude Include="..\..\..\addons\ofxStateMachine\src\ofxState.h">
-			<Filter>addons\ofxStateMachine\src</Filter>
-		</ClInclude>
-		<ClInclude Include="..\..\..\addons\ofxStateMachine\src\ofxStateMachine.h">
-			<Filter>addons\ofxStateMachine\src</Filter>
 		</ClInclude>
 	</ItemGroup>
 	<ItemGroup>
