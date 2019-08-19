@@ -25,7 +25,7 @@ void ofApp::setup() {
 	// CAMERA
 	// ---------------------------------
 	vidGrabber.setVerbose(true);
-	vidGrabber.setDeviceID(2);
+	vidGrabber.setDeviceID(3);
 	vidGrabber.initGrabber(1280, 720);
 	vidGrabber.videoSettings();
 
@@ -311,12 +311,12 @@ void ofApp::draw(){
 	}
 
 	// Joystick-Debug
-	ofxGLFWJoystick::one().drawDebug(100, 100);
-	ofSetColor(255);
-	ofCircle(ofMap(joyX, -1, 1, 0, ofGetWidth()), ofMap(joyY, -1, 1, 0, ofGetHeight()), 3);
-	ss.str("");
-	ss  << "(" << joyX << " | " << joyY << ")";
-	ofDrawBitmapString(ss.str(), ofMap(joyX, -1, 1, 0, ofGetWidth()), ofMap(joyY, -1, 1, 0, ofGetHeight()));
+	//ofxGLFWJoystick::one().drawDebug(100, 100);
+	//ofSetColor(255);
+	//ofCircle(ofMap(joyX, -1, 1, 0, ofGetWidth()), ofMap(joyY, -1, 1, 0, ofGetHeight()), 3);
+	//ss.str("");
+	//ss  << "(" << joyX << " | " << joyY << ")";
+	//ofDrawBitmapString(ss.str(), ofMap(joyX, -1, 1, 0, ofGetWidth()), ofMap(joyY, -1, 1, 0, ofGetHeight()));
 
 	ss.str("");
 	ss << "Records: ";
@@ -427,7 +427,6 @@ void ofApp::keyPressed(int key) {
 }
 
 void ofApp::keyReleased(int key) {
-
 }
 
 void ofApp::mousePressed(int x, int y, int button) 
